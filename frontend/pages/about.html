@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>시스템 소개 - 좌석 예약 시스템</title>
+  <style>
+    :root {
+      --primary-color: #007bff;
+      --container-bg: #fff;
+      --body-bg: #f8f9fa;
+      --text-color: #333;
+      --border-color: #e0e0e0;
+      --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--body-bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+    .container {
+      background: var(--container-bg);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      width: 90%;
+      max-width: 800px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    h1, h2 {
+      color: var(--primary-color);
+      margin-top: 0;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+    .main-content {
+      text-align: left;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+    .section h3 {
+      color: #555;
+      border-left: 4px solid var(--primary-color);
+      padding-left: 10px;
+    }
+    .feature-list {
+      list-style-type: none;
+      padding: 0;
+    }
+    .feature-list li {
+      background: #e9ecef;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      transition: transform 0.2s ease;
+    }
+    .feature-list li:hover {
+      transform: translateX(5px);
+    }
+    .feature-list li strong {
+      color: var(--primary-color);
+    }
+    .button-container {
+      margin-top: 30px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    .action-button {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 12px 25px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+    .action-button:hover {
+      background-color: #0056b3;
+    }
+    .contact-button {
+      background-color: #6c757d; /* Gray for contact button */
+    }
+    .contact-button:hover {
+      background-color: #5a6268;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>📖 좌석 예약 시스템 소개</h1>
+  <div class="main-content">
+    <div class="section">
+      <h2>시스템 개요</h2>
+      <p>
+        이 시스템은 사용자가 편리하게 좌석을 확인하고 예약할 수 있도록 설계된 웹 기반 솔루션입니다. 
+        실시간 좌석 상태 정보를 제공하여, 스터디 카페, 독서실, 회의실 등 다양한 공간에서 효율적인 좌석 관리를 가능하게 합니다.
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>주요 기능</h2>
+      <ul class="feature-list">
+        <li>
+          <strong>사용자 친화적 UI:</strong> 직관적인 좌석 배치도를 통해 현재 좌석 상태(사용 가능, 예약 완료)를 한눈에 파악할 수 있습니다.
+        </li>
+        <li>
+          <strong>간편한 로그인:</strong> Google 계정을 이용한 소셜 로그인을 지원하여 별도의 회원가입 절차 없이 빠르게 시스템을 이용할 수 있습니다.
+        </li>
+        <li>
+          <strong>실시간 좌석 예약:</strong> 원하는 좌석을 선택하고, 시작 및 종료 시간을 지정하여 간편하게 예약할 수 있습니다.
+        </li>
+        <li>
+          <strong>내 예약 관리:</strong> 사용자는 본인이 예약한 좌석 목록을 확인하고, 필요한 경우 예약을 취소할 수 있습니다.
+        </li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>기술 스택</h2>
+      <p>
+        본 시스템은 다음과 같은 기술들을 활용하여 개발되었습니다.
+      </p>
+      <ul class="feature-list">
+        <li><strong>Frontend:</strong> HTML5, CSS3, JavaScript, <a href="https://flatpickr.js.org/" target="_blank">Flatpickr</a> (날짜/시간 선택 라이브러리)</li>
+        <li><strong>Backend:</strong> Python, Flask (웹 프레임워크), SQLite (데이터베이스)</li>
+        <li><strong>Authentication:</strong> Firebase Authentication (Google OAuth)</li>
+      </ul>
+    </div>
+
+    <div class="button-container">
+      <a href="index.html" class="action-button">🏠 메인 페이지로 돌아가기</a>
+      <a href="mailto:support@yourcompany.com?subject=[문의] 좌석 예약 시스템 관련 문의&body=안녕하세요, 시스템 관련 문의사항이 있어 연락 드립니다." class="action-button contact-button">✉️ 문의하기</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

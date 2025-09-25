@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>스터디룸에 있는 사람 (블루투스)</title>
+  <style>
+    :root {
+      --primary-color: #007bff;
+      --primary-hover-color: #0056b3;
+      --container-bg: #fff;
+      --body-bg: #f8f9fa;
+      --text-color: #333;
+      --border-color: #e0e0e0;
+      --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--body-bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+    .container {
+      background: var(--container-bg);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+    }
+    h1 {
+      color: var(--primary-color);
+      margin-bottom: 20px;
+    }
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: var(--primary-hover-color);
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    #status-message {
+      margin-top: 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #555;
+    }
+    .device-info {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      text-align: left;
+      background-color: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>📡 근처 기기 찾기 (블루투스)</h1>
+  <p id="message">Web Bluetooth API를 사용합니다. 브라우저의 보안 정책상 HTTPS 환경에서만 작동하며, 사용자의 명시적 동의가 필요합니다.</p>
+  <button id="find-devices-btn">🔍 근처 블루투스 장치 찾기</button>
+  <p id="status-message">버튼을 눌러 근처의 블루투스 장치를 찾아보세요.</p>
+  <div id="device-info-container" class="device-info" style="display: none;">
+    <h3>찾은 장치 정보</h3>
+    <p><strong>이름:</strong> <span id="device-name"></span></p>
+    <p><strong>ID:</strong> <span id="device-id"></span></p>
+  </div>
+</div>
+
+<script>
+  const findButton = document.getElementById('find-devices-btn');
+  const statusMessage = document.getElementById('status-message');
+  const deviceInfoContainer = document.getElementById('device-info-container');
+  const deviceName = document.getElementById('device-name');
+  const deviceId = document.getElementById('device-id');
+
+  findButton.addEventListener('click', async () => {
+    try {
+      if (!navigator.bluetooth) {
+        statusMessage.textContent = '❌ 이 브라우저는 Web Bluetooth를 지원하지 않습니다.';
+        return;
+      }
+      
+      statusMessage.textContent = '장치 검색 중...';
+      findButton.disabled = true;
+
+      const device = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true
+      });
+
+      statusMessage.textContent = '✅ 장치를 찾았습니다!';
+      deviceName.textContent = device.name || '알 수 없음';
+      deviceId.textContent = device.id;
+      deviceInfoContainer.style.display = 'block';
+      
+    } catch (error) {
+      if (error.name === 'NotFoundError') {
+        statusMessage.textContent = '장치 검색을 취소했습니다.';
+      } else {
+        statusMessage.textContent = `❌ 오류 발생: ${error.message}`;
+        console.error("Web Bluetooth API 오류:", error);
+      }
+      deviceInfoContainer.style.display = 'none';
+    } finally {
+      findButton.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

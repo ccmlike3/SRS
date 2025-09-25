@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>네트워크 상태 확인기</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+      color: #333;
+    }
+    .container {
+      background: #fff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      transition: box-shadow 0.3s ease;
+    }
+    h1 {
+      color: #007bff;
+      margin-bottom: 20px;
+    }
+    #status-message {
+      font-size: 2em;
+      font-weight: bold;
+      padding: 10px 20px;
+      border-radius: 8px;
+      display: inline-block;
+      transition: background-color 0.5s ease, color 0.5s ease;
+    }
+    .online {
+      background-color: #28a745; /* Green */
+      color: white;
+    }
+    .offline {
+      background-color: #dc3545; /* Red */
+      color: white;
+    }
+    p {
+      margin-top: 20px;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>📡 네트워크 상태 확인</h1>
+  <div id="status-message"></div>
+  <p>이 메시지는 네트워크 연결 상태에 따라 자동으로 업데이트됩니다.</p>
+</div>
+
+<script>
+  const statusMessage = document.getElementById('status-message');
+
+  function updateStatus(isOnline) {
+    if (isOnline) {
+      statusMessage.textContent = '🟢 온라인';
+      statusMessage.classList.remove('offline');
+      statusMessage.classList.add('online');
+      console.log('네트워크가 연결되었습니다.');
+    } else {
+      statusMessage.textContent = '🔴 오프라인';
+      statusMessage.classList.remove('online');
+      statusMessage.classList.add('offline');
+      console.log('네트워크 연결이 끊어졌습니다.');
+    }
+  }
+
+  // 초기 상태 확인
+  updateStatus(navigator.onLine);
+
+  // 네트워크 상태 변경 이벤트 리스너
+  window.addEventListener('online', () => updateStatus(true));
+  window.addEventListener('offline', () => updateStatus(false));
+</script>
+</body>
+</html>

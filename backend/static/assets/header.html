@@ -1,0 +1,37 @@
+<style>
+  .header-nav {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px 0;
+    background-color: var(--primary-color);
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  .header-nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1em;
+    padding: 10px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+  .header-nav a:hover {
+    background-color: var(--primary-hover-color);
+  }
+  body {
+    padding-top: 80px; /* 헤더 높이만큼 본문 패딩 추가 */
+  }
+</style>
+
+<div class="header-nav">
+  <a href="/">🏠 메인</a>
+  <a href="/about">ℹ️ 시스템 소개</a>
+  <a href="/network-check">🌐 네트워크 상태</a>
+  <a href="/find">🌐 강의실에 온 사람(WebBluetooth 기반)</a>
+</div>

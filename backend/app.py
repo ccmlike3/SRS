@@ -31,10 +31,24 @@ from flask import send_from_directory
 @app.route('/frontend')
 def frontend_page():
     return send_from_directory('static', 'index.html')
+@app.route('/about')
+def about_page():
+    return send_from_directory('static/pages', 'about.html')
+@app.route('/network-check')
+def netcheck_page():
+    return send_from_directory('static/pages', 'check.html')
+@app.route('/header')
+def header_page():
+    return send_from_directory('static/assets', 'header.html')
+@app.route('/find')
+def find_page():
+    return send_from_directory('static/pages', 'find.html')
+
 
 # 실행
 if __name__ == '__main__':
     print("🚀 서버 실행 중...")
-    app.run(debug=True)
+    ssl_context = ( 'certs/cert.pem', 'certs/key.pem')
+    app.run(debug=True, ssl_context=ssl_context)
 
 
