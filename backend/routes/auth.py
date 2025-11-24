@@ -6,38 +6,82 @@ bp = Blueprint('auth', __name__)
 
 @bp.route('/api/login', methods=['POST'])
 def login_or_register():
-    print("✅ /api/login 요청 도착")
+    print("\n==============================")
+    print("🔥 /api/login 요청 도착")
+    print("==============================")
 
-    # 1. 헤더 로그 확인
-    headers = dict(request.headers)
-    print("🔎 요청 헤더:", headers)
+    # 전체 요청 헤더 출력
+    try:
+        print("📌 요청 헤더 전체:")
+        for k, v in request.headers.items():
+            print(f"   {k}: {v}")
+    except Exception as e:
+        print("❌ 헤더 출력 중 오류:", e)
 
-    # 2. ID 토큰이 있는가?
-    auth_header = headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        print("❌ Authorization 헤더 누락 또는 잘못됨")
-        return jsonify({"error": "Authorization token required"}), 401
+    # Authorization 헤더 검사
+    try:
+        auth_header = request.headers.get("Authorization")
+        print(f"\n🔎 Authorization 헤더 값: {auth_header}")
 
-    token = auth_header.split(" ")[1]
-    print("🧾 받은 토큰:", token[:30], "...")  # 토큰 일부만 출력
+        if not auth_header:
+            print("❌ Authorization 없음 → 401")
+            return jsonify({"error": "Authorization header missing"}), 401
 
-    # 3. 요청 본문(JSON)
-    data = request.get_json()
-    print("📦 요청 본문:", data)
+        if not auth_header.startswith("Bearer "):
+            print("❌ Authorization 형식 오류 → 401")
+            return jsonify({"error": "Authorization header invalid"}), 401
 
-    # 임시로 이메일만 사용
-    email = data.get('email')
-    name = data.get('name', '이름없음')
+        token = auth_header.split(" ", 1)[1]
+        print(f"🔐 토큰 앞부분: {token[:20]}...")
+    except Exception as e:
+        print("❌ Authorization 처리 중 오류:", e)
+        return jsonify({"error": "authorization error"}), 500
 
-    # 4. 사용자 등록 또는 찾기
-    user = User.query.filter_by(email=email).first()
-    if not user:
-        user = User(email=email, name=name)
-        db.session.add(user)
-        db.session.commit()
-        print(f"🆕 사용자 생성: {email}")
+    # Body 파싱
+    try:
+        data = request.get_json()
+        print("\n📌 요청 Body(JSON):", data)
 
-    print(f"✅ 로그인 완료: user_id={user.id}")
+        if data is None:
+            print("❌ JSON Body 없음 → 400")
+            return jsonify({"error": "no json body"}), 400
+
+        email = data.get("email")
+        name = data.get("name")
+        print(f"🔎 email: {email}, name: {name}")
+
+        if not email:
+            print("❌ email 누락 → 400")
+            return jsonify({"error": "email is required"}), 400
+    except Exception as e:
+        print("❌ JSON 파싱 오류:", e)
+        return jsonify({"error": "json parse error"}), 500
+
+    # DB에서 사용자 찾기
+    try:
+        print("\n🔍 DB에서 사용자 검색 중...")
+        user = User.query.filter_by(email=email).first()
+        print(f"🔎 검색 결과: {user}")
+    except Exception as e:
+        print("❌ DB 조회 중 오류:", e)
+        return jsonify({"error": "database query error"}), 500
+
+    # 없으면 새 유저 생성
+    try:
+        if not user:
+            print("🆕 DB에 사용자 없음 → 새로 생성")
+            user = User(email=email, name=name)
+            db.session.add(user)
+            db.session.commit()
+            print(f"✅ 새 사용자 생성 완료 → ID={user.id}")
+        else:
+            print("✅ 기존 사용자 확인 → 로그인 성공")
+    except Exception as e:
+        print("❌ 사용자 생성/커밋 중 오류:", e)
+        return jsonify({"error": "user create error"}), 500
+
+    # 성공 응답 반환
+    print("\n🎉 로그인 성공 → 응답 반환 중...")
     return jsonify({
         "id": user.id,
         "email": user.email,

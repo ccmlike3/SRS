@@ -21,6 +21,8 @@
       border-radius: 12px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
       transition: box-shadow 0.3s ease;
+      width: 90%;
+      max-width: 480px;
     }
     h1 {
       color: #007bff;
@@ -45,6 +47,22 @@
     p {
       margin-top: 20px;
       color: #6c757d;
+      font-size: 0.9em;
+    }
+    .back-button {
+      margin-top: 25px;
+      padding: 12px 25px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+      width: 100%;
+      max-width: 260px;
+    }
+    .back-button:hover {
+      background: #0056b3;
     }
   </style>
 </head>
@@ -53,6 +71,11 @@
   <h1>📡 네트워크 상태 확인</h1>
   <div id="status-message"></div>
   <p>이 메시지는 네트워크 연결 상태에 따라 자동으로 업데이트됩니다.</p>
+
+  <!-- 🔽 여기 위치가 최적 -->
+  <button class="back-button" onclick="window.location.href='/frontend'">
+    🏠 메인 페이지로 돌아가기
+  </button>
 </div>
 
 <script>

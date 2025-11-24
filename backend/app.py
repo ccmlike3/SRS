@@ -45,10 +45,8 @@ def find_page():
     return send_from_directory('static/pages', 'find.html')
 
 
-# 실행
-if __name__ == '__main__':
-    print("🚀 서버 실행 중...")
-    ssl_context = ( 'certs/cert.pem', 'certs/key.pem')
-    app.run(debug=True, ssl_context=ssl_context)
+if __name__ == "__main__":
+    print("🚀 서버 실행 (HTTP 모드)")
+    app.run(debug=True)  # ssl_context 없애기
 
 

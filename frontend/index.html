@@ -200,8 +200,18 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+import { 
+  getAuth, 
+  signInWithPopup, 
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
 
+console.log("✅ 스크립트 로드됨");
+
+// ---------------- 헤더 로드 ----------------
 async function loadHeader() {
   try {
     const response = await fetch('/header');
@@ -213,30 +223,81 @@ async function loadHeader() {
 }
 loadHeader();
 
+// ---------------- Firebase 설정 ----------------
 const firebaseConfig = {
   apiKey: "AIzaSyCTX4qEpj8kHbjc-M71xd6Hh0QMnnrfgS0",
   authDomain: "seat-reservation-6f3e0.firebaseapp.com",
   projectId: "seat-reservation-6f3e0",
   storageBucket: "seat-reservation-6f3e0.firebasestorage.app",
-  messagingSenderId: "731975354847",
-  appId: "1:731975354847:web:1c46bdb749b8a17a415c6a"
+  messagingSenderId: "361365743105",
+  appId: "1:361365743105:web:39f5ef559a37e2abf2f149",
+  measurementId: "G-1H3NT7B2F3"
 };
 
-initializeApp(firebaseConfig);
-const auth = getAuth();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
+
+// 🔒 로그인 상태를 localStorage에 유지 (Firebase 기준)
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+  console.error("setPersistence 실패:", err);
+});
 
 let currentUserId = null;
 let selectedSeatId = null;
 
+// ---------------- 공통 UI 함수 ----------------
+function applyLoggedInUI(name) {
+  document.getElementById("user-welcome").innerText = `${name}님 환영합니다!`;
+  document.getElementById("login-area").style.display = "none";
+  document.getElementById("main-area").style.display = "block";
+}
+
+function applyLoggedOutUI() {
+  currentUserId = null;
+  document.getElementById("user-welcome").innerText = "";
+  document.getElementById("login-area").style.display = "block";
+  document.getElementById("main-area").style.display = "none";
+}
+
+// ---------------- 로컬스토리지 저장/복원 ----------------
+const LOCAL_KEY = "srs_user";
+
+function saveUserToLocal(userObj) {
+  try {
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(userObj));
+    console.log("💾 localStorage에 사용자 저장:", userObj);
+  } catch (e) {
+    console.error("localStorage 저장 실패:", e);
+  }
+}
+
+function loadUserFromLocal() {
+  try {
+    const raw = localStorage.getItem(LOCAL_KEY);
+    if (!raw) {
+      console.log("📭 localStorage에 저장된 사용자 없음");
+      return null;
+    }
+    const parsed = JSON.parse(raw);
+    console.log("📦 localStorage에서 사용자 복원:", parsed);
+    return parsed;
+  } catch (e) {
+    console.error("localStorage 파싱 실패:", e);
+    return null;
+  }
+}
+
+// ---------------- 시간 선택 ----------------
 const startTimePicker = flatpickr("#start-time", {
   enableTime: true,
   dateFormat: "Y-m-d H:i",
   time_24hr: true,
   minuteIncrement: 30,
-  minDate: "today",
-  onChange: function(selectedDates, dateStr, instance) {
-    endTimePicker.set("minDate", dateStr);
+  defaultDate: new Date(),
+  onChange: function (selectedDates) {
+    const endPicker = document.querySelector("#end-time")._flatpickr;
+    endPicker.set("minDate", selectedDates[0] || new Date());
     calculateTotalTime();
   }
 });
@@ -246,118 +307,167 @@ const endTimePicker = flatpickr("#end-time", {
   dateFormat: "Y-m-d H:i",
   time_24hr: true,
   minuteIncrement: 30,
-  minDate: "today",
-  onChange: function(selectedDates, dateStr, instance) {
-    calculateTotalTime();
-  }
+  defaultDate: new Date(new Date().getTime() + 60 * 60 * 1000),
+  onChange: calculateTotalTime
 });
 
 function calculateTotalTime() {
-  const start = startTimePicker.selectedDates[0];
-  const end = endTimePicker.selectedDates[0];
-  const totalTimeElement = document.getElementById("total-time");
-  if (start && end && end > start) {
-    const diffMs = end - start;
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    totalTimeElement.innerText = `총 예약 시간: ${diffHours}시간 ${diffMinutes}분`;
-    totalTimeElement.style.display = 'block';
-    document.getElementById("reserve-button").disabled = false;
-  } else {
-    totalTimeElement.style.display = 'none';
-    document.getElementById("reserve-button").disabled = true;
+  const startDate = startTimePicker.selectedDates[0];
+  const endDate = endTimePicker.selectedDates[0];
+  const totalTimeDiv = document.getElementById("total-time");
+  const reserveButton = document.querySelector("button[onclick='submitReservation()']");
+
+  if (!startDate || !endDate || endDate <= startDate) {
+    totalTimeDiv.style.display = "none";
+    reserveButton.disabled = true;
+    return;
   }
+
+  const diffMs = endDate - startDate;
+  const diffMinutes = Math.floor(diffMs / 60000);
+  const hours = Math.floor(diffMinutes / 60);
+  const minutes = diffMinutes % 60;
+
+  totalTimeDiv.style.display = "block";
+  totalTimeDiv.innerText = `총 예약 시간: ${hours}시간 ${minutes}분`;
+  reserveButton.disabled = false;
 }
 
+// ---------------- 로그인 ----------------
 window.loginWithGoogle = async () => {
   try {
+    console.log("🔵 loginWithGoogle 호출");
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
+    console.log("✅ Firebase 로그인 성공:", user.email);
+
     const idToken = await user.getIdToken();
-    const res = await fetch("http://localhost:5000/api/login", {
+
+    const res = await fetch("/api/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + idToken },
+      headers: { 
+        "Content-Type": "application/json", 
+        Authorization: "Bearer " + idToken 
+      },
       body: JSON.stringify({ email: user.email, name: user.displayName })
     });
+
     const data = await res.json();
+    console.log("📨 /api/login 응답:", res.status, data);
+
+    if (!res.ok) {
+      alert(data.error || "로그인에 실패했습니다.");
+      return;
+    }
+
     currentUserId = data.id;
-    document.getElementById("login-area").style.display = "none";
-    document.getElementById("main-area").style.display = "block";
-    document.getElementById("user-welcome").innerText = `${data.name}님 환영합니다!`;
+    saveUserToLocal({ id: data.id, name: data.name, email: data.email }); // 🔑 직접 저장
+    applyLoggedInUI(data.name);
+
     await loadSeats();
+    await loadMyReservations();
   } catch (error) {
-    console.error("로그인 오류:", error);
-    document.getElementById("login-message").innerText = "로그인에 실패했습니다. 다시 시도해주세요.";
+    console.error("로그인 중 오류 발생:", error);
+    alert("로그인 중 오류가 발생했습니다.");
   }
 };
 
+// ---------------- 좌석 로드 ----------------
 async function loadSeats() {
   try {
-    const res = await fetch("http://localhost:5000/api/seats");
+    const res = await fetch("/api/seats");
     const seats = await res.json();
+
     const container = document.getElementById("seat-container");
     container.innerHTML = "";
-    // 백엔드에서 20x20 좌석을 모두 반환한다고 가정
-    const totalSeats = 400;
-    for (let i = 1; i <= totalSeats; i++) {
-        const seat = seats.find(s => s.id === i) || { id: i, status: 'available' };
-        const div = document.createElement("div");
-        div.className = "seat " + seat.status;
-        div.innerText = seat.id;
-        if (seat.status === "available") {
-          div.onclick = () => selectSeat(seat.id, div);
-        }
-        container.appendChild(div);
+
+    for (let i = 1; i <= 400; i++) {
+      const seat = seats.find(s => s.id === i) || { id: i, status: "available" };
+      const seatDiv = document.createElement("div");
+      seatDiv.className = `seat ${seat.status}`;
+      seatDiv.innerText = seat.id;
+
+      if (seat.status === "available") {
+        seatDiv.onclick = () => selectSeat(seat.id, seatDiv);
+      }
+
+      container.appendChild(seatDiv);
     }
   } catch (error) {
     console.error("좌석 정보를 불러오는 중 오류 발생:", error);
-    document.getElementById("result-message").innerText = "좌석 정보를 불러올 수 없습니다. 서버 상태를 확인해주세요.";
+    alert("좌석 정보를 불러올 수 없습니다. 서버 상태를 확인해주세요.");
   }
 }
 
-function selectSeat(id, element) {
-  document.querySelectorAll(".seat").forEach(s => s.classList.remove("selected"));
+function selectSeat(seatId, element) {
+  const seats = document.querySelectorAll(".seat");
+  seats.forEach(seat => seat.classList.remove("selected"));
+
   element.classList.add("selected");
-  selectedSeatId = id;
-  document.getElementById("reserve-button").disabled = false;
+  selectedSeatId = seatId;
+
+  const reserveButton = document.querySelector("button[onclick='submitReservation()']");
+  reserveButton.disabled = false;
 }
 
+// ---------------- 예약 요청 ----------------
 window.submitReservation = async () => {
+  if (!currentUserId) {
+    alert("먼저 로그인을 해주세요.");
+    return;
+  }
+
+  if (!selectedSeatId) {
+    alert("예약할 좌석을 선택해주세요.");
+    return;
+  }
+
   const startTime = document.getElementById("start-time").value;
   const endTime = document.getElementById("end-time").value;
   const message = document.getElementById("result-message");
 
-  if (!selectedSeatId || !currentUserId || !startTime || !endTime) {
-    message.innerText = "모든 값을 입력하고 좌석을 선택하세요.";
+  if (!startTime || !endTime) {
+    message.innerText = "시작 시간과 종료 시간을 모두 선택해주세요.";
     return;
   }
 
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-  if (start < new Date() || end <= start) {
+  const startDate = new Date(startTime);
+  const endDate = new Date(endTime);
+  const now = new Date();
+
+  if (endDate <= startDate || startDate <= now) {
     message.innerText = "유효한 미래 시간을 선택해주세요.";
     return;
   }
 
   try {
-    const res = await fetch("http://localhost:5000/api/reserve", {
+    const res = await fetch("/api/reserve", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: currentUserId, seat_id: selectedSeatId, start_time: startTime, end_time: endTime })
+      body: JSON.stringify({ 
+        user_id: currentUserId, 
+        seat_id: selectedSeatId, 
+        start_time: startTime, 
+        end_time: endTime 
+      })
     });
+
     const result = await res.json();
-    message.innerText = result.message || result.error;
+    message.innerText = result.message || result.error || "알 수 없는 응답입니다.";
+
     await loadSeats();
+    await loadMyReservations();
   } catch (error) {
-    console.error("예약 오류:", error);
-    message.innerText = "예약 처리 중 오류가 발생했습니다. 다시 시도해주세요.";
+    console.error("예약 요청 중 오류 발생:", error);
+    message.innerText = "예약 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
   }
 };
 
+// ---------------- 예약 취소 ----------------
 window.cancelReservation = async (reservationId) => {
   if (!confirm("정말 예약을 취소하시겠습니까?")) return;
   try {
-    const res = await fetch("http://localhost:5000/api/cancel", {
+    const res = await fetch("/api/cancel", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ reservation_id: reservationId })
@@ -372,10 +482,17 @@ window.cancelReservation = async (reservationId) => {
   }
 };
 
+// ---------------- 내 예약 조회 ----------------
 window.loadMyReservations = async () => {
+  if (!currentUserId) {
+    alert("먼저 로그인을 해주세요.");
+    return;
+  }
+
   try {
-    const res = await fetch(`http://localhost:5000/api/user/${currentUserId}/reservations`);
+    const res = await fetch(`/api/user/${currentUserId}/reservations`);
     const reservations = await res.json();
+
     const tbody = document.querySelector("#reservation-table tbody");
     tbody.innerHTML = reservations.map(r => `
       <tr>
@@ -386,12 +503,38 @@ window.loadMyReservations = async () => {
         <td>${r.status}</td>
         <td>${r.status === 'reserved' ? `<button onclick="cancelReservation(${r.id})">취소</button>` : '취소 불가'}</td>
       </tr>`).join('');
+
     document.getElementById("reservation-table").style.display = "table";
   } catch (error) {
     console.error("내 예약 목록을 불러오는 중 오류 발생:", error);
     alert("내 예약 목록을 불러올 수 없습니다. 서버 상태를 확인해주세요.");
   }
 };
+
+// ---------------- 페이지 첫 로드 시: localStorage로 복구 ----------------
+(function restoreFromLocal() {
+  const saved = loadUserFromLocal();
+  if (!saved) {
+    console.log("🔁 시작 시: 저장된 사용자 없음");
+    applyLoggedOutUI();
+    return;
+  }
+  console.log("🔁 시작 시: localStorage 기반으로 로그인 UI 복구");
+  currentUserId = saved.id;
+  applyLoggedInUI(saved.name);
+  loadSeats();
+  loadMyReservations();
+})();
+
+// ---------------- Firebase 기준 자동 로그인 복구 (보너스) ----------------
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    console.log("🔄 onAuthStateChanged: Firebase 기준 로그인 상태:", user.email);
+    // 이미 localStorage로 복구된 상태라면 굳이 다시 /api/login 안 쳐도 됨.
+    // 필요하면 여기서 토큰 검증/동기화 추가 가능.
+  } else {
+    console.log("🔄 onAuthStateChanged: Firebase 기준 로그아웃 상태");
+  }
+});
 </script>
-</body>
-</html>
+
