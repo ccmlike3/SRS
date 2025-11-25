@@ -1,5 +1,3 @@
-# backend/init_seats_400.py
-
 from app import app
 from extensions import db
 from models.seat import Seat

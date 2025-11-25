@@ -10,7 +10,6 @@ def login_or_register():
     print("🔥 /api/login 요청 도착")
     print("==============================")
 
-    # 전체 요청 헤더 출력
     try:
         print("📌 요청 헤더 전체:")
         for k, v in request.headers.items():
@@ -18,7 +17,6 @@ def login_or_register():
     except Exception as e:
         print("❌ 헤더 출력 중 오류:", e)
 
-    # Authorization 헤더 검사
     try:
         auth_header = request.headers.get("Authorization")
         print(f"\n🔎 Authorization 헤더 값: {auth_header}")
@@ -37,7 +35,6 @@ def login_or_register():
         print("❌ Authorization 처리 중 오류:", e)
         return jsonify({"error": "authorization error"}), 500
 
-    # Body 파싱
     try:
         data = request.get_json()
         print("\n📌 요청 Body(JSON):", data)
@@ -57,7 +54,6 @@ def login_or_register():
         print("❌ JSON 파싱 오류:", e)
         return jsonify({"error": "json parse error"}), 500
 
-    # DB에서 사용자 찾기
     try:
         print("\n🔍 DB에서 사용자 검색 중...")
         user = User.query.filter_by(email=email).first()
@@ -66,7 +62,6 @@ def login_or_register():
         print("❌ DB 조회 중 오류:", e)
         return jsonify({"error": "database query error"}), 500
 
-    # 없으면 새 유저 생성
     try:
         if not user:
             print("🆕 DB에 사용자 없음 → 새로 생성")
@@ -80,7 +75,6 @@ def login_or_register():
         print("❌ 사용자 생성/커밋 중 오류:", e)
         return jsonify({"error": "user create error"}), 500
 
-    # 성공 응답 반환
     print("\n🎉 로그인 성공 → 응답 반환 중...")
     return jsonify({
         "id": user.id,

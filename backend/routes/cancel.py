@@ -10,7 +10,6 @@ def cancel_reservation():
     data = request.get_json()
     reservation_id = data.get('reservation_id')
 
-    # 예약 검색
     reservation = Reservation.query.get(reservation_id)
     if not reservation:
         return jsonify({"error": "해당 예약을 찾을 수 없습니다."}), 404
@@ -18,10 +17,8 @@ def cancel_reservation():
     if reservation.status == 'cancelled':
         return jsonify({"error": "이미 취소된 예약입니다."}), 400
 
-    # 상태 변경
     reservation.status = 'cancelled'
 
-    # 좌석 상태 복구
     seat = Seat.query.get(reservation.seat_id)
     if seat:
         seat.status = 'available'

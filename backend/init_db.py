@@ -4,7 +4,6 @@ from models import user, seat, reservation
 
 with app.app_context():
     print("⚠️ 좌석 및 예약 테이블 초기화 중 (사용자 유지)")
-    # 예약 및 좌석 테이블만 삭제 후 생성
     reservation.Reservation.__table__.drop(db.engine)
     seat.Seat.__table__.drop(db.engine)
     db.create_all()

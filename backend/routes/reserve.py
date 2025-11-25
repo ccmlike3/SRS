@@ -15,13 +15,11 @@ def reserve_seat():
     end_time = data.get('end_time')
 
     try:
-        # 문자열 → datetime 변환
         start_dt = datetime.fromisoformat(start_time)
         end_dt = datetime.fromisoformat(end_time)
     except Exception:
         return jsonify({"error": "날짜 형식이 잘못되었습니다."}), 400
 
-    # 중복 예약 검사
     conflict = Reservation.query.filter(
         Reservation.seat_id == seat_id,
         Reservation.end_time > start_dt.isoformat(),
@@ -32,14 +30,12 @@ def reserve_seat():
     if conflict:
         return jsonify({"error": "해당 시간에 이미 예약된 좌석입니다."}), 409
 
-    # 좌석 존재 확인 및 상태 변경
     seat = Seat.query.get(seat_id)
     if not seat:
         return jsonify({"error": "해당 좌석이 존재하지 않습니다."}), 404
 
-    seat.status = 'reserved'  # ✅ 좌석 상태 변경
+    seat.status = 'reserved'
 
-    # 예약 생성
     reservation = Reservation(
         user_id=user_id,
         seat_id=seat_id,
@@ -48,7 +44,7 @@ def reserve_seat():
         status='reserved'
     )
 
-    db.session.add_all([reservation, seat])  # 두 객체 모두 커밋
+    db.session.add_all([reservation, seat])
     db.session.commit()
 
     return jsonify({"message": "예약이 완료되었습니다."}), 201

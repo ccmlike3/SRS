@@ -37,11 +37,11 @@
       transition: background-color 0.5s ease, color 0.5s ease;
     }
     .online {
-      background-color: #28a745; /* Green */
+      background-color: #28a745;
       color: white;
     }
     .offline {
-      background-color: #dc3545; /* Red */
+      background-color: #dc3545;
       color: white;
     }
     p {
@@ -72,7 +72,6 @@
   <div id="status-message"></div>
   <p>이 메시지는 네트워크 연결 상태에 따라 자동으로 업데이트됩니다.</p>
 
-  <!-- 🔽 여기 위치가 최적 -->
   <button class="back-button" onclick="window.location.href='/frontend'">
     🏠 메인 페이지로 돌아가기
   </button>
@@ -95,10 +94,8 @@
     }
   }
 
-  // 초기 상태 확인
   updateStatus(navigator.onLine);
 
-  // 네트워크 상태 변경 이벤트 리스너
   window.addEventListener('online', () => updateStatus(true));
   window.addEventListener('offline', () => updateStatus(false));
 </script>
